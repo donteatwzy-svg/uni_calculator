@@ -1,0 +1,826 @@
+@font-face {
+  font-family: 'OPPOSans';
+  src: url('fonts/OPPOSans-Regular.ttf') format('truetype');
+  font-weight: 400 900;
+  font-display: swap;
+}
+
+:root {
+  --bg: #000000;
+  --card-bg: #ffffff;
+  --card-bg-soft: #f5f5f3;
+  --text-black: #0a0a0a;
+  --text-muted: #6b6b6b;
+  --accent-pink: #f0acc4;
+  --accent-pink-soft: rgba(240, 172, 196, 0.35);
+  --accent-yellow: #e7f23a;
+  --accent-red: #ee3b3b;
+  --accent-blue: #2e4fe0;
+  --accent-green: #7cb342;
+  --accent-gray: #d9d9d9;
+  --border-hair: rgba(0, 0, 0, 0.08);
+  --radius-lg: 28px;
+  --radius-md: 20px;
+  --radius-pill: 999px;
+  --gap: 14px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  font-family: 'OPPOSans', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  color: var(--text-black);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100vh;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+}
+
+/* ============ 屏幕切换 ============ */
+
+.screen {
+  display: none;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.screen.is-active {
+  display: flex;
+}
+
+/* ============ 主界面网格 ============ */
+
+.app {
+  width: 100%;
+  max-width: 1200px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.05fr;
+  grid-template-rows: auto 1fr auto;
+  gap: var(--gap);
+  grid-template-areas:
+    "notebook clock calcHeader"
+    "notebook clock calcBody"
+    "bottom bottom calcBody";
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  border: none;
+  position: relative;
+  overflow: hidden;
+  min-height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: default;
+  font-family: inherit;
+}
+
+.card-clock {
+  grid-area: clock;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.card-clock:hover { transform: translateY(-2px); }
+.card-clock:active { transform: scale(0.99); }
+
+.card-notebook {
+  grid-area: notebook;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.card-notebook:hover { transform: translateY(-2px); }
+.card-notebook:active { transform: scale(0.99); }
+
+.card-illustration {
+  max-width: 62%;
+  max-height: 55%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,0.12));
+}
+
+.clock-readout {
+  position: absolute;
+  top: 24px;
+  left: 28px;
+  text-align: left;
+}
+
+.clock-time {
+  font-size: clamp(20px, 2.4vw, 30px);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.clock-date {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ---------- 底部状态条 ---------- */
+
+.bottom-bar {
+  grid-area: bottom;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 18px 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 88px;
+}
+
+.bottom-bar-left {
+  font-size: clamp(18px, 2vw, 26px);
+  font-weight: 700;
+}
+
+.bottom-bar-right {
+  text-align: right;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- 计算器头部 ---------- */
+
+.calc-header {
+  grid-area: calcHeader;
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+}
+
+.accent-block {
+  width: 56px;
+  height: 56px;
+  background: var(--accent-pink);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.calc-title {
+  flex: 1;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 22px;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+/* ---------- 计算器主体 ---------- */
+
+.calc-body {
+  grid-area: calcBody;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 30px 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.calc-reset-btn {
+  align-self: flex-start;
+  font-size: 13px;
+  padding: 10px 20px;
+}
+
+.calc-label {
+  font-size: 15px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.calc-amount {
+  font-size: clamp(48px, 8vw, 96px);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -1px;
+  margin-top: 8px;
+  word-break: break-all;
+}
+
+/* ============ 按钮通用 ============ */
+
+.pill-btn {
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 12px 26px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+.pill-btn:active { transform: scale(0.97); }
+
+.pill-btn--primary { background: var(--text-black); color: #fff; }
+.pill-btn--ghost { background: var(--card-bg-soft); color: var(--text-black); }
+.pill-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ============ 计时 / 选老板 / 结算 共用容器 ============ */
+
+.flow-wrap {
+  width: 100%;
+  max-width: 640px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  align-items: flex-start;
+}
+
+.icon-close {
+  position: absolute;
+  top: -6px;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--card-bg-soft);
+  color: var(--text-black);
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.flow-heading {
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.settle-project-input {
+  width: 100%;
+  background: var(--card-bg);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-black);
+  margin-top: -14px;
+}
+.settle-project-input::placeholder { color: var(--text-muted); font-weight: 500; }
+.settle-project-input:focus { outline: none; }
+
+/* ---------- 计时界面 ---------- */
+
+.timer-face {
+  width: 100%;
+  background: var(--card-bg);
+  border-radius: var(--radius-pill);
+  padding: 40px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timer-face-value {
+  font-size: clamp(56px, 10vw, 110px);
+  font-weight: 800;
+  letter-spacing: 1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-controls {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ctrl-btn {
+  width: 72px;
+  height: 72px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 26px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ctrl-btn:active { transform: scale(0.95); }
+.ctrl-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.ctrl-btn--play { background: var(--accent-yellow); color: var(--text-black); }
+.ctrl-btn--pause { background: var(--accent-gray); color: var(--text-black); }
+.ctrl-btn--stop { background: var(--accent-red); color: #fff; }
+
+.starts-from {
+  flex: 1;
+  min-width: 180px;
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.starts-from-label {
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.starts-from-value {
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 确认结束弹层 ---------- */
+
+.modal--confirm {
+  max-width: 460px;
+  gap: 20px;
+}
+
+.modal--confirm .modal-title {
+  text-align: center;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.modal-confirm-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.confirm-btn {
+  flex: 1;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 16px 10px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+.confirm-btn--no { background: var(--accent-red); color: #fff; }
+.confirm-btn--yes { background: var(--accent-yellow); color: var(--text-black); }
+
+/* ---------- 选择老板界面 ---------- */
+
+.picker-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.picker-tile {
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+  min-height: 92px;
+  padding: 14px;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transition: transform 0.12s ease;
+}
+.picker-tile:active { transform: scale(0.96); }
+
+.picker-tile-wrap {
+  position: relative;
+}
+.picker-tile-wrap .picker-tile {
+  width: 100%;
+  height: 100%;
+}
+
+.picker-tile-delete {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent-red);
+  color: #fff;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.picker-tile-delete:active { transform: scale(0.9); }
+
+.picker-tile--add {
+  background: var(--accent-yellow);
+  font-size: 28px;
+}
+
+.picker-tile--special {
+  background: var(--card-bg-soft);
+}
+
+.picker-tile-sub {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ---------- 结算界面 ---------- */
+
+.settle-columns {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.settle-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settle-tab {
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+}
+.settle-tab--aram { background: var(--accent-yellow); color: var(--text-black); }
+.settle-tab--rank { background: var(--accent-blue); color: #fff; }
+
+.settle-time {
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  padding: 20px 10px;
+  font-size: clamp(32px, 6vw, 48px);
+  font-weight: 800;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.settle-billed-hint {
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  font-weight: 600;
+  padding-left: 4px;
+}
+
+.is-hidden { display: none !important; }
+
+.formula-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.formula-field {
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.formula-field--highlight { background: var(--accent-pink); }
+
+.formula-field input {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-black);
+  width: 100%;
+}
+.formula-field input:focus { outline: none; }
+
+.settle-type-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.settle-type-btn {
+  flex: 1;
+  border: 1px solid var(--border-hair);
+  background: var(--card-bg-soft);
+  border-radius: var(--radius-md);
+  padding: 10px 8px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-black);
+  cursor: pointer;
+}
+.settle-type-btn.is-active {
+  background: var(--text-black);
+  color: #fff;
+  border-color: var(--text-black);
+}
+
+.settle-count-row {
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settle-count {
+  font-size: clamp(28px, 5vw, 40px);
+  font-weight: 800;
+}
+
+.count-step {
+  border: none;
+  background: var(--card-bg-soft);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.settle-rate-row {
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.settle-currency { font-size: 15px; }
+
+.settle-rate-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text-black);
+}
+.settle-rate-input:focus { outline: none; }
+
+.settle-rate-unit { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+.settle-manual-input {
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-hair);
+  padding: 12px 16px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text-black);
+}
+
+.settle-btn {
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 14px;
+  font-weight: 700;
+  font-size: 15px;
+  background: var(--accent-green);
+  color: #fff;
+  cursor: pointer;
+}
+.settle-btn.is-settled {
+  background: var(--text-black);
+}
+.settle-btn.is-settled::after {
+  content: " ✓";
+}
+
+.settle-summary {
+  width: 100%;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.settle-total-label { font-size: 14px; color: var(--text-muted); font-weight: 600; }
+.settle-total-amount { font-size: 28px; font-weight: 800; margin-right: auto; }
+
+.settle-tab-input {
+  border: none;
+  font-family: inherit;
+  text-align: center;
+  width: 100%;
+}
+.settle-tab-input:focus { outline: 2px solid rgba(0,0,0,0.2); }
+
+.settle-tab--aram.settle-tab-input { background: var(--accent-yellow); color: var(--text-black); }
+.settle-tab--rank.settle-tab-input { background: var(--accent-blue); color: #fff; }
+
+.records-filters {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.records-filter-field {
+  flex: 1;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  font-weight: 600;
+}
+
+.records-filter-field select {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-black);
+  background: var(--card-bg);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+
+/* ---------- 接单记录界面 ---------- */
+
+.records-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.records-empty-hint {
+  color: rgba(255,255,255,0.6);
+  font-size: 14px;
+  padding: 20px 0;
+  margin: 0;
+}
+
+.records-list:empty::after {
+  content: "还没有接单记录";
+  color: rgba(255,255,255,0.6);
+  font-size: 14px;
+  padding: 20px 0;
+}
+
+.record-item {
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  cursor: pointer;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+.record-item:active { transform: scale(0.99); }
+
+.record-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.record-item-boss { font-weight: 700; font-size: 15px; }
+.record-item-sub { font-weight: 500; font-size: 12px; color: var(--text-muted); }
+.record-item-meta { font-size: 12px; color: var(--text-muted); }
+.record-item-timeline { font-size: 11px; color: var(--text-muted); }
+.record-item-formula { font-size: 11px; color: var(--text-black); font-weight: 600; }
+.record-item-amount { font-weight: 800; font-size: 18px; flex-shrink: 0; margin-left: 12px; }
+
+/* ============ 弹层通用 ============ */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 10;
+}
+.modal-overlay.is-open { display: flex; }
+
+.modal {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modal-title { margin: 0; font-size: 18px; }
+.modal-sub { margin: -8px 0 0; color: var(--text-muted); font-size: 13px; }
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.modal-field input {
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--text-black);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-hair);
+  background: var(--card-bg-soft);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* ============ 响应式 ============ */
+
+@media (max-width: 860px) {
+  .app {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto auto;
+    grid-template-areas:
+      "notebook clock"
+      "bottom bottom"
+      "calcHeader calcHeader"
+      "calcBody calcBody";
+  }
+}
+
+@media (max-width: 560px) {
+  .screen { padding: 16px; }
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "notebook"
+      "clock"
+      "bottom"
+      "calcHeader"
+      "calcBody";
+  }
+  .card { min-height: 200px; }
+  .bottom-bar { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .bottom-bar-right { text-align: left; }
+  .settle-columns { grid-template-columns: 1fr; }
+  .timer-controls { justify-content: center; }
+}

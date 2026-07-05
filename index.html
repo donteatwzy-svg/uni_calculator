@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>接单计时器 · Calculator</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ========== 主界面 ========== -->
+<div class="screen is-active" id="homeScreen">
+  <div class="app">
+
+    <!-- 左1：实时时钟卡片（点击进入计时） -->
+    <button class="card card-clock" id="openTimerBtn" type="button">
+      <img src="images/clock.png" class="card-illustration" alt="闹钟">
+      <div class="clock-readout">
+        <div class="clock-time" id="liveTime">00:00</div>
+        <div class="clock-date" id="liveDate">1 Jan 2026</div>
+      </div>
+    </button>
+
+    <!-- 左2：笔记本卡片（点击查看接单记录） -->
+    <button class="card card-notebook" id="openRecordsBtn" type="button">
+      <img src="images/notebook.png" class="card-illustration" alt="笔记本">
+    </button>
+
+    <!-- 底部状态条 -->
+    <section class="bottom-bar">
+      <div class="bottom-bar-left">
+        你今天已接单 <span id="todayTotal">00:00</span>
+      </div>
+      <div class="bottom-bar-right">
+        <span id="bottomDate">1 July 2026</span>
+        <span id="bottomTime">00:00</span>
+      </div>
+    </section>
+
+    <!-- 右：计算器头部 -->
+    <section class="calc-header">
+      <div class="accent-block"></div>
+      <div class="calc-title">Calculator</div>
+    </section>
+
+    <!-- 右：计算器主体 -->
+    <section class="calc-body">
+      <div class="calc-top">
+        <div class="calc-label">本月入账</div>
+        <div class="calc-amount" id="monthlyIncome">00.00</div>
+      </div>
+      <button class="pill-btn pill-btn--ghost calc-reset-btn" id="resetMonthlyBtn" type="button">清空数据</button>
+    </section>
+
+  </div>
+</div>
+
+<!-- ========== 计时界面 ========== -->
+<div class="screen" id="timerScreen">
+  <div class="flow-wrap">
+    <button class="icon-close" id="timerCloseBtn" type="button" aria-label="关闭">×</button>
+
+    <div class="timer-face">
+      <div class="timer-face-value" id="timerFaceValue">00:00</div>
+    </div>
+
+    <div class="timer-controls">
+      <button class="ctrl-btn ctrl-btn--play" id="playBtn" type="button">▶</button>
+      <button class="ctrl-btn ctrl-btn--pause" id="pauseBtn" type="button">❚❚</button>
+      <button class="ctrl-btn ctrl-btn--stop" id="stopBtn" type="button">■</button>
+      <div class="starts-from">
+        <span class="starts-from-label">Starts From</span>
+        <span class="starts-from-value" id="startsFromValue">--:--</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 确认结束弹层 ========== -->
+<div class="modal-overlay" id="confirmEndModal">
+  <div class="modal modal--confirm">
+    <h3 class="modal-title">你的接单是否已经结束</h3>
+    <div class="modal-confirm-actions">
+      <button class="confirm-btn confirm-btn--no" id="confirmNoBtn" type="button">否（返回计时）</button>
+      <button class="confirm-btn confirm-btn--yes" id="confirmYesBtn" type="button">是（进入结算）</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 选择接单老板界面 ========== -->
+<div class="screen" id="pickerScreen">
+  <div class="flow-wrap">
+    <button class="icon-close" id="pickerCloseBtn" type="button" aria-label="关闭">×</button>
+    <h3 class="flow-heading">接单老板</h3>
+    <div class="picker-grid" id="pickerGrid"></div>
+  </div>
+</div>
+
+<!-- ========== 结算界面 ========== -->
+<div class="screen" id="settleScreen">
+  <div class="flow-wrap">
+    <button class="icon-close" id="settleCloseBtn" type="button" aria-label="关闭">×</button>
+    <h3 class="flow-heading" id="settleBossName">老板</h3>
+    <input type="text" id="settleProjectName" class="settle-project-input" placeholder="项目名称（可选，例如：陪玩 3 局 / 代练上分）">
+
+    <div class="settle-columns">
+
+      <div class="settle-col settle-col--aram">
+        <input type="text" id="aramTabLabelInput" class="settle-tab settle-tab--aram settle-tab-input" value="匹配 / Aram">
+        <div class="settle-time" id="settleTime">00:00</div>
+        <div class="settle-billed-hint" id="settleBilledHint">计费 0 小时</div>
+
+        <!-- 简单版：单一时薪 -->
+        <div class="settle-rate-row" id="settleSimpleFields">
+          <span class="settle-currency">$</span>
+          <input type="number" id="aramRateInput" class="settle-rate-input" step="0.01" min="0" placeholder="0">
+          <span class="settle-rate-unit">/ 小时</span>
+        </div>
+
+        <!-- 复合公式版：单价 × 游戏倍率 × 老板折扣 × 工会分成 -->
+        <div class="formula-grid" id="settleFormulaFields">
+          <label class="formula-field">
+            <span class="formula-field-label">单价 $/时</span>
+            <input type="number" id="formulaUnitPriceInput" step="0.01" min="0">
+          </label>
+          <label class="formula-field formula-field--highlight">
+            <span class="formula-field-label">游戏倍率 ×</span>
+            <input type="number" id="formulaMultiplierInput" step="0.01" min="0">
+          </label>
+          <label class="formula-field">
+            <span class="formula-field-label">老板折扣 ×</span>
+            <input type="number" id="formulaBossDiscountInput" step="0.01" min="0">
+          </label>
+          <label class="formula-field">
+            <span class="formula-field-label">工会分成 ×</span>
+            <input type="number" id="formulaGuildSplitInput" step="0.01" min="0">
+          </label>
+        </div>
+
+        <button class="settle-btn" id="settleAramBtn" type="button">结算</button>
+      </div>
+
+      <div class="settle-col settle-col--rank">
+        <input type="text" id="rankTabLabelInput" class="settle-tab settle-tab--rank settle-tab-input" value="Flex / Rank">
+        <div class="settle-count-row">
+          <button class="count-step" id="countDownBtn" type="button">▾</button>
+          <div class="settle-count" id="rankCount">01</div>
+          <button class="count-step" id="countUpBtn" type="button">▴</button>
+        </div>
+        <div class="settle-rate-row">
+          <span class="settle-currency">$</span>
+          <input type="number" id="rankRateInput" class="settle-rate-input" step="0.01" min="0" placeholder="0">
+          <span class="settle-rate-unit">/ 局</span>
+        </div>
+        <input type="number" id="rankManualPrice" class="settle-manual-input" placeholder="手动输入价格" step="0.01" min="0">
+        <button class="settle-btn" id="settleRankBtn" type="button">结算</button>
+      </div>
+
+    </div>
+
+    <div class="settle-summary">
+      <div class="settle-total-label">本单合计</div>
+      <div class="settle-total-amount" id="settleTotalAmount">$0.00</div>
+      <button class="pill-btn pill-btn--primary" id="finishSettleBtn" type="button">完成，记入本月收入</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 接单记录界面 ========== -->
+<div class="screen" id="recordsScreen">
+  <div class="flow-wrap">
+    <button class="icon-close" id="recordsCloseBtn" type="button" aria-label="关闭">×</button>
+    <h3 class="flow-heading">接单记录</h3>
+
+    <div class="records-filters">
+      <label class="records-filter-field">
+        <span>老板</span>
+        <select id="filterBossSelect">
+          <option value="all">全部老板</option>
+        </select>
+      </label>
+      <label class="records-filter-field">
+        <span>游戏</span>
+        <select id="filterGameSelect">
+          <option value="all">全部游戏</option>
+          <option value="塔克夫">塔克夫</option>
+          <option value="匹配/Aram">匹配/Aram</option>
+          <option value="Rank/Flex">Rank/Flex</option>
+          <option value="其他">其他</option>
+        </select>
+      </label>
+      <label class="records-filter-field">
+        <span>排序</span>
+        <select id="sortRecordsSelect">
+          <option value="newest">最新在前</option>
+          <option value="oldest">最早在前</option>
+          <option value="amountDesc">金额从高到低</option>
+          <option value="amountAsc">金额从低到高</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="records-list" id="recordsList"></div>
+  </div>
+</div>
+
+<!-- ========== 编辑接单记录弹层 ========== -->
+<div class="modal-overlay" id="editRecordModal">
+  <div class="modal">
+    <h3 class="modal-title" id="editRecordTitle">编辑记录</h3>
+    <p class="modal-sub" id="editRecordMeta">2026-07-04 09:00 · 时长 00:00</p>
+
+    <label class="modal-field">
+      项目名称
+      <input type="text" id="editProjectName" placeholder="可选">
+    </label>
+
+    <label class="modal-field" id="editAramField">
+      匹配 / Aram 金额
+      <input type="number" id="editAramAmount" step="0.01">
+    </label>
+
+    <label class="modal-field" id="editRankField">
+      Flex / Rank 金额
+      <input type="number" id="editRankAmount" step="0.01">
+    </label>
+
+    <div class="modal-actions">
+      <button class="pill-btn pill-btn--ghost" id="deleteRecordBtn" type="button">删除记录</button>
+      <button class="pill-btn pill-btn--ghost" id="cancelEditRecord" type="button">取消</button>
+      <button class="pill-btn pill-btn--primary" id="saveEditRecord" type="button">保存修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 添加老板的弹层 ========== -->
+<div class="modal-overlay" id="addBossModal">
+  <div class="modal">
+    <h3 class="modal-title">添加老板</h3>
+    <label class="modal-field">
+      名称
+      <input type="text" id="newBossName" placeholder="例如：Anchovy">
+    </label>
+
+    <div class="modal-field">
+      结算方式
+      <div class="settle-type-toggle">
+        <button type="button" class="settle-type-btn is-active" id="typeSimpleBtn" data-type="simple">简单版（时薪/局费）</button>
+        <button type="button" class="settle-type-btn" id="typeFormulaBtn" data-type="formula">复合公式版</button>
+      </div>
+    </div>
+
+    <div id="newBossSimpleFields">
+      <label class="modal-field">
+        匹配 / Aram 时薪（元/小时，可留空）
+        <input type="number" id="newBossAramRate" placeholder="例如：13" min="0" step="0.01">
+      </label>
+    </div>
+
+    <div id="newBossFormulaFields" class="is-hidden">
+      <label class="modal-field">
+        单价（元/小时，可留空）
+        <input type="number" id="newBossUnitPrice" placeholder="例如：16" min="0" step="0.01">
+      </label>
+      <label class="modal-field">
+        游戏倍率（可留空，默认 1）
+        <input type="number" id="newBossMultiplier" placeholder="例如：1.5" min="0" step="0.01">
+      </label>
+      <label class="modal-field">
+        老板折扣（可留空，默认 1）
+        <input type="number" id="newBossDiscount" placeholder="例如：0.95" min="0" step="0.01">
+      </label>
+      <label class="modal-field">
+        工会分成（可留空，默认 1）
+        <input type="number" id="newBossGuildSplit" placeholder="例如：0.78" min="0" step="0.01">
+      </label>
+    </div>
+
+    <label class="modal-field">
+      Flex / Rank 局费（元/局，可留空）
+      <input type="number" id="newBossRankRate" placeholder="例如：16" min="0" step="0.01">
+    </label>
+    <div class="modal-actions">
+      <button class="pill-btn pill-btn--ghost" id="cancelAddBoss" type="button">取消</button>
+      <button class="pill-btn pill-btn--primary" id="confirmAddBoss" type="button">保存</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
