@@ -137,21 +137,11 @@ const todayTotalEl = document.getElementById('todayTotal');
 const monthlyIncomeEl = document.getElementById('monthlyIncome');
 const monthlyIncomeCadEl = document.getElementById('monthlyIncomeCad');
 
-let usdToCadRate = null;
+const usdToCadRate = 1.4; // 固定汇率，不联网请求
 
-async function fetchUsdToCadRate() {
-  try {
-    const res = await fetch('https://api.frankfurter.app/latest?from=USD&to=CAD');
-    const data = await res.json();
-    if (data && data.rates && typeof data.rates.CAD === 'number') {
-      usdToCadRate = data.rates.CAD;
-    } else {
-      throw new Error('unexpected response');
-    }
-  } catch (e) {
-    usdToCadRate = null;
-  }
-  renderMonthlyCad();
+function renderMonthlyCad() {
+  const cad = monthly.income * usdToCadRate;
+  monthlyIncomeCadEl.textContent = `≈ CA$ ${cad.toFixed(2)}`;
 }
 
 function renderMonthlyCad() {
@@ -163,9 +153,7 @@ function renderMonthlyCad() {
   monthlyIncomeCadEl.textContent = `≈ CA$ ${cad.toFixed(2)}`;
 }
 
-monthlyIncomeCadEl.textContent = '汇率加载中…';
-fetchUsdToCadRate();
-setInterval(fetchUsdToCadRate, 30 * 60 * 1000); // 每 30 分钟刷新一次汇率
+renderMonthlyCad();
 
 function tickClock() {
   const now = new Date();
