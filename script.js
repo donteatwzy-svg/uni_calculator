@@ -135,6 +135,37 @@ const bottomDateEl = document.getElementById('bottomDate');
 const bottomTimeEl = document.getElementById('bottomTime');
 const todayTotalEl = document.getElementById('todayTotal');
 const monthlyIncomeEl = document.getElementById('monthlyIncome');
+const monthlyIncomeCadEl = document.getElementById('monthlyIncomeCad');
+
+let usdToCadRate = null;
+
+async function fetchUsdToCadRate() {
+  try {
+    const res = await fetch('https://api.frankfurter.app/latest?from=USD&to=CAD');
+    const data = await res.json();
+    if (data && data.rates && typeof data.rates.CAD === 'number') {
+      usdToCadRate = data.rates.CAD;
+    } else {
+      throw new Error('unexpected response');
+    }
+  } catch (e) {
+    usdToCadRate = null;
+  }
+  renderMonthlyCad();
+}
+
+function renderMonthlyCad() {
+  if (usdToCadRate == null) {
+    monthlyIncomeCadEl.textContent = '汇率获取失败';
+    return;
+  }
+  const cad = monthly.income * usdToCadRate;
+  monthlyIncomeCadEl.textContent = `≈ CA$ ${cad.toFixed(2)}`;
+}
+
+monthlyIncomeCadEl.textContent = '汇率加载中…';
+fetchUsdToCadRate();
+setInterval(fetchUsdToCadRate, 30 * 60 * 1000); // 每 30 分钟刷新一次汇率
 
 function tickClock() {
   const now = new Date();
@@ -161,7 +192,10 @@ setInterval(tickClock, 1000);
 tickClock();
 
 function renderToday() { todayTotalEl.textContent = formatHM(today.ms); }
-function renderMonthly() { monthlyIncomeEl.textContent = monthly.income.toFixed(2); }
+function renderMonthly() {
+  monthlyIncomeEl.textContent = monthly.income.toFixed(2);
+  renderMonthlyCad();
+}
 renderToday();
 renderMonthly();
 
@@ -443,6 +477,8 @@ document.getElementById('confirmAddBoss').addEventListener('click', () => {
 
 const settleBossNameEl = document.getElementById('settleBossName');
 const settleProjectNameInput = document.getElementById('settleProjectName');
+const settleStartTimeInput = document.getElementById('settleStartTimeInput');
+const settleEndTimeInput = document.getElementById('settleEndTimeInput');
 const aramTabLabelInput = document.getElementById('aramTabLabelInput');
 const rankTabLabelInput = document.getElementById('rankTabLabelInput');
 const settleTimeEl = document.getElementById('settleTime');
@@ -480,6 +516,8 @@ function openSettleScreen(boss) {
   settleBossNameEl.textContent = boss.name;
   settleTimeEl.textContent = formatElapsed(sessionElapsedMs).slice(-5); // 显示 mm:ss
   settleBilledHintEl.textContent = `计费 ${roundedBillingHours(sessionElapsedMs)} 小时`;
+  settleStartTimeInput.value = sessionStartClock ? formatTimeInputValue(sessionStartClock) : '';
+  settleEndTimeInput.value = sessionEndClock ? formatTimeInputValue(sessionEndClock) : '';
 
   settleSimpleFields.classList.toggle('is-hidden', currentSettleType !== 'simple');
   settleFormulaFields.classList.toggle('is-hidden', currentSettleType !== 'formula');
@@ -519,6 +557,50 @@ function openSettleScreen(boss) {
 function rankManualPrice_reset() {
   rankManualPriceInput.value = '';
 }
+
+// Date 对象 -> <input type="time"> 需要的 "HH:MM" 格式
+function formatTimeInputValue(date) {
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+// 根据一个基准日期 + "HH:MM" 字符串，构造具体的 Date；如果结束时间早于开始时间，按跨天处理
+function buildTimeRange(baseDate, startVal, endVal) {
+  if (!startVal || !endVal) return null;
+  const [sh, sm] = startVal.split(':').map(Number);
+  const [eh, em] = endVal.split(':').map(Number);
+  const start = new Date(baseDate);
+  start.setHours(sh, sm, 0, 0);
+  const end = new Date(baseDate);
+  end.setHours(eh, em, 0, 0);
+  if (end <= start) end.setDate(end.getDate() + 1);
+  return { start, end };
+}
+
+// 手动修改结算界面的开始/结束时间后，重新计算时长；金额相关的匹配/Aram 结算需要重新确认
+function recomputeSessionFromTimeInputs() {
+  const baseDate = sessionStartClock || new Date();
+  const range = buildTimeRange(baseDate, settleStartTimeInput.value, settleEndTimeInput.value);
+  if (!range) return;
+
+  sessionStartClock = range.start;
+  sessionEndClock = range.end;
+  sessionElapsedMs = range.end - range.start;
+
+  settleTimeEl.textContent = formatElapsed(sessionElapsedMs).slice(-5);
+  settleBilledHintEl.textContent = `计费 ${roundedBillingHours(sessionElapsedMs)} 小时`;
+
+  // 时长变了，之前按时长结算的金额已经不准确，需要重新点一次结算
+  if (aramSettled) {
+    aramSettled = false;
+    aramAmount = 0;
+    settleAramBtn.textContent = '结算';
+    settleAramBtn.classList.remove('is-settled');
+    updateSettleTotal();
+  }
+}
+
+settleStartTimeInput.addEventListener('change', recomputeSessionFromTimeInputs);
+settleEndTimeInput.addEventListener('change', recomputeSessionFromTimeInputs);
 
 countDownBtn.addEventListener('click', () => {
   rankCount = Math.max(1, rankCount - 1);
@@ -758,6 +840,8 @@ const editRecordModal = document.getElementById('editRecordModal');
 const editRecordTitle = document.getElementById('editRecordTitle');
 const editRecordMeta = document.getElementById('editRecordMeta');
 const editProjectNameInput = document.getElementById('editProjectName');
+const editStartTimeInput = document.getElementById('editStartTimeInput');
+const editEndTimeInput = document.getElementById('editEndTimeInput');
 const editAramField = document.getElementById('editAramField');
 const editRankField = document.getElementById('editRankField');
 const editAramAmountInput = document.getElementById('editAramAmount');
@@ -773,6 +857,8 @@ function openEditRecord(id) {
   editRecordTitle.textContent = `编辑记录 · ${record.bossName}`;
   editRecordMeta.textContent = formatRecordMeta(record.ts, record.elapsedMs);
   editProjectNameInput.value = record.projectName || '';
+  editStartTimeInput.value = record.startClock ? formatTimeInputValue(new Date(record.startClock)) : '';
+  editEndTimeInput.value = record.endClock ? formatTimeInputValue(new Date(record.endClock)) : '';
 
   editAramField.classList.toggle('is-hidden', !record.aramSettled);
   editRankField.classList.toggle('is-hidden', !record.rankSettled);
@@ -793,6 +879,15 @@ document.getElementById('saveEditRecord').addEventListener('click', () => {
 
   const oldTotal = record.total;
   record.projectName = editProjectNameInput.value.trim();
+
+  // 修改开始/结束时间：重新计算时长（用原记录的日期作为基准）
+  const baseDate = record.startClock ? new Date(record.startClock) : new Date(record.ts);
+  const range = buildTimeRange(baseDate, editStartTimeInput.value, editEndTimeInput.value);
+  if (range) {
+    record.startClock = range.start.getTime();
+    record.endClock = range.end.getTime();
+    record.elapsedMs = range.end - range.start;
+  }
 
   if (record.aramSettled) {
     const v = parseFloat(editAramAmountInput.value);

@@ -52,6 +52,7 @@
       <div class="calc-top">
         <div class="calc-label">本月入账</div>
         <div class="calc-amount" id="monthlyIncome">00.00</div>
+        <div class="calc-amount-cad" id="monthlyIncomeCad">≈ CA$ --</div>
       </div>
       <button class="pill-btn pill-btn--ghost calc-reset-btn" id="resetMonthlyBtn" type="button">清空数据</button>
     </section>
@@ -106,6 +107,17 @@
     <button class="icon-close" id="settleCloseBtn" type="button" aria-label="关闭">×</button>
     <h3 class="flow-heading" id="settleBossName">老板</h3>
     <input type="text" id="settleProjectName" class="settle-project-input" placeholder="项目名称（可选，例如：陪玩 3 局 / 代练上分）">
+
+    <div class="settle-time-edit">
+      <label class="settle-time-edit-field">
+        开始时间
+        <input type="time" id="settleStartTimeInput">
+      </label>
+      <label class="settle-time-edit-field">
+        结束时间
+        <input type="time" id="settleEndTimeInput">
+      </label>
+    </div>
 
     <div class="settle-columns">
 
@@ -218,6 +230,17 @@
       项目名称
       <input type="text" id="editProjectName" placeholder="可选">
     </label>
+
+    <div class="settle-time-edit">
+      <label class="settle-time-edit-field">
+        开始时间
+        <input type="time" id="editStartTimeInput">
+      </label>
+      <label class="settle-time-edit-field">
+        结束时间
+        <input type="time" id="editEndTimeInput">
+      </label>
+    </div>
 
     <label class="modal-field" id="editAramField">
       匹配 / Aram 金额
